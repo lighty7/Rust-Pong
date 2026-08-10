@@ -1,0 +1,30 @@
+[package]
+name = "rust-pingpong"
+version = "1.0.0"
+edition = "2021"
+authors = ["Yash <yash@example.com>"]
+description = "Terminal-based Google Ping-Pong game with AI written in Rust"
+license = "MIT"
+repository = "https://github.com/your-username/rust-pingpong"
+readme = "README.md"
+keywords = ["game", "pingpong", "terminal", "ai", "rust"]
+categories = ["games", "command-line-utilities"]
+
+[lib]
+name = "rust_pingpong"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rust-pingpong"
+path = "src/main.rs"
+
+[dependencies]
+crossterm = "0.28"
+rand = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

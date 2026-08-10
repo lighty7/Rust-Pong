@@ -1,0 +1,12 @@
+# Cargo Target Directory
+target/
+
+# IDE / Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Cargo Lock file (Optional for binaries, kept in git if lockfile needed)
+# Cargo.lock is tracked for reproducible binary builds

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  rust-pingpong:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rust-pingpong:latest
+    container_name: rust_pingpong_game
+    stdin_open: true  # docker run -i
+    tty: true         # docker run -t
+    environment:
+      - TERM=xterm-256color
