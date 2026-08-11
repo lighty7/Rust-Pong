@@ -6,13 +6,21 @@
 # ubuntu runtime image to yield a small production container.
 # ==============================================================================
 
-# STAGE 1: Build Environment
-FROM rust:1.80-slim AS builder
+# STAGE 1: Build Environment (using latest stable Rust compiler)
+FROM rust:1-slim AS builder
+
+# Install C/X11/OpenGL build dependencies for Macroquad
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libx11-dev \
+    libxi-dev \
+    libgl1-mesa-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy Cargo manifests and source code
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY tests ./tests
 
@@ -25,9 +33,13 @@ FROM ubuntu:24.04 AS runtime
 
 WORKDIR /app
 
-# Install minimal terminal runtime dependencies
+# Install X11 and Mesa OpenGL runtime libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    libx11-6 \
+    libxi6 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy compiled Rust binary from builder stage
