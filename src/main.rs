@@ -1,9 +1,4 @@
-//! Entry point for Ping-Pong (Rust Edition).
-//!
-//! # TUTORIAL SYNTAX & CONCEPTS:
-//! 1. Module System (`mod` keyword): Declares submodule tree structure.
-//! 2. Panic Hooks (`std::panic::set_hook`): Custom handler restoring raw terminal state
-//!    if an unhandled panic occurs, preventing terminal corruption.
+//! Entry point for Ping-Pong GUI (Rust Edition).
 
 mod ball;
 mod config;
@@ -11,20 +6,28 @@ mod game;
 mod paddle;
 mod renderer;
 
+use config::Config;
 use game::Game;
-use renderer::Renderer;
-use std::error::Error;
+use macroquad::prelude::*;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    // Set custom panic hook to restore terminal raw mode safely on crash
-    let default_panic = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |info| {
-        let _ = Renderer::disable_raw_mode();
-        default_panic(info);
-    }));
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Ping-Pong (Rust GUI Edition)".to_string(),
+        window_width: Config::SCREEN_WIDTH as i32,
+        window_height: Config::SCREEN_HEIGHT as i32,
+        window_resizable: false,
+        ..Default::default()
+    }
+}
 
+#[macroquad::main(window_conf)]
+async fn main() {
     let mut game = Game::new();
-    game.run()?;
 
-    Ok(())
+    loop {
+        if !game.update_frame() {
+            break;
+        }
+        next_frame().await;
+    }
 }

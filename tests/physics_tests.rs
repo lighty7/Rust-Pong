@@ -23,7 +23,7 @@ fn test_wall_bounce() {
 fn test_paddle_collision() {
     let paddle = Paddle::new(5.0, 10.0, 5);
     assert!(paddle.check_collision(5.0, 10.0));
-    assert!(!paddle.check_collision(25.0, 10.0));
+    assert!(!paddle.check_collision(100.0, 10.0));
 }
 
 #[test]

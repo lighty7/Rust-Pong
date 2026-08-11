@@ -26,7 +26,7 @@ impl Ball {
             y: start_y,
             dir_x: 1.0,
             dir_y: 0.0,
-            speed: 32.0,
+            speed: 450.0,
         };
         ball.reset(start_x, start_y);
         ball
@@ -36,7 +36,7 @@ impl Ball {
     pub fn reset(&mut self, start_x: f64, start_y: f64) {
         self.x = start_x;
         self.y = start_y;
-        self.speed = 32.0;
+        self.speed = 450.0;
 
         let mut rng = rand::thread_rng();
         self.dir_x = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
@@ -60,8 +60,8 @@ impl Ball {
         self.dir_y = hit_offset * 1.2;
 
         // Increase volley speed slightly over time
-        if self.speed < 60.0 {
-            self.speed += 1.5;
+        if self.speed < 850.0 {
+            self.speed += 25.0;
         }
     }
 }

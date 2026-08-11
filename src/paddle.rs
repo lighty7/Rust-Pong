@@ -24,7 +24,7 @@ impl Paddle {
             x,
             y: start_y,
             height,
-            speed: 24.0,
+            speed: 550.0,
             score: 0,
         }
     }
@@ -77,7 +77,7 @@ impl Paddle {
         };
 
         // Deadzone check to avoid high-frequency jittering
-        let deadzone = 0.5;
+        let deadzone = 5.0;
         if self.y < target_y - deadzone {
             self.y += bot_speed * delta_time;
         } else if self.y > target_y + deadzone {
@@ -97,8 +97,8 @@ impl Paddle {
     /// Evaluates if ball coordinates overlap with paddle bounding area.
     pub fn check_collision(&self, ball_x: f64, ball_y: f64) -> bool {
         let half_h = (self.height as f64) / 2.0;
-        let x_match = (ball_x - self.x).abs() <= 1.2;
-        let y_match = ball_y >= self.y - half_h - 0.5 && ball_y <= self.y + half_h + 0.5;
+        let x_match = (ball_x - self.x).abs() <= 16.0;
+        let y_match = ball_y >= self.y - half_h - 8.0 && ball_y <= self.y + half_h + 8.0;
         x_match && y_match
     }
 

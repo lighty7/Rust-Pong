@@ -1,70 +1,27 @@
-//! Terminal Renderer using Crossterm for ANSI colors and raw keyboard input.
-//!
-//! # TUTORIAL SYNTAX & CONCEPTS:
-//! 1. `crossterm::terminal::enable_raw_mode()`: Puts terminal into raw mode (disabling canonical buffering).
-//! 2. `crossterm::event::poll()`: Non-blocking check for keyboard input events.
-//! 3. `execute!` / `queue!`: Macro syntax for sending VT100 / ANSI escape sequences to stdout.
+//! Macroquad 2D Graphical Renderer Module.
 
 use crate::ball::Ball;
 use crate::config::{BotDifficulty, Config};
 use crate::paddle::Paddle;
 
-use crossterm::{
-    cursor::{Hide, MoveTo, Show},
-    event::{self, Event, KeyCode},
-    execute,
-    style::{Color, ResetColor, SetForegroundColor},
-    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
-};
-use std::io::{self, Write};
-use std::time::Duration;
+use macroquad::prelude::*;
 
 pub struct Renderer {
-    pub width: u16,
-    pub height: u16,
+    pub width: f32,
+    pub height: f32,
 }
 
 impl Renderer {
-    pub fn new(width: u16, height: u16) -> Self {
+    pub fn new(width: f32, height: f32) -> Self {
         Self { width, height }
     }
 
-    /// Enables raw terminal input mode and hides cursor.
-    pub fn enable_raw_mode() -> io::Result<()> {
-        enable_raw_mode()?;
-        execute!(io::stdout(), Hide)?;
-        Ok(())
+    /// Clears the screen and draws background
+    pub fn clear_screen(&self) {
+        clear_background(Config::COLOR_BACKGROUND);
     }
 
-    /// Restores default terminal state and shows cursor.
-    pub fn disable_raw_mode() -> io::Result<()> {
-        execute!(io::stdout(), Show, ResetColor)?;
-        disable_raw_mode()?;
-        Ok(())
-    }
-
-    /// Polls for keyboard events non-blockingly within `timeout`.
-    pub fn poll_key(timeout: Duration) -> io::Result<Option<char>> {
-        if event::poll(timeout)? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == event::KeyEventKind::Press {
-                    match key.code {
-                        KeyCode::Char(c) => return Ok(Some(c)),
-                        KeyCode::Esc => return Ok(Some('q')),
-                        _ => {}
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    pub fn clear_screen(&self) -> io::Result<()> {
-        execute!(io::stdout(), Clear(ClearType::All), MoveTo(0, 0))?;
-        Ok(())
-    }
-
-    /// Renders game state to terminal using Crossterm double-buffered queue macros.
+    /// Renders full 2D game state to window
     pub fn render(
         &self,
         ball: &Ball,
@@ -72,15 +29,8 @@ impl Renderer {
         bot: &Paddle,
         diff: BotDifficulty,
         paused: bool,
-    ) -> io::Result<()> {
-        let mut stdout = io::stdout();
-
-        // Move to origin (0,0) instead of clear screen to eliminate flicker
-        execute!(stdout, MoveTo(0, 0))?;
-
-        // Title Header
-        execute!(stdout, SetForegroundColor(Color::Cyan))?;
-        writeln!(stdout, "  === PING-PONG GAME (RUST EDITION) ===  ")?;
+    ) {
+        self.clear_screen();
 
         let diff_str = match diff {
             BotDifficulty::Easy => "EASY",
@@ -88,149 +38,214 @@ impl Renderer {
             BotDifficulty::Hard => "HARD",
         };
 
-        // Scoreboard
-        execute!(stdout, SetForegroundColor(Color::White))?;
-        writeln!(
-            stdout,
-            "  [ PLAYER (W/S) : {} ]    BOT ({}) : {}    [ Q:Quit  P:Pause ]",
+        // 1. Top & Bottom Borders
+        draw_rectangle(0.0, 0.0, self.width, 10.0, Config::COLOR_BORDER);
+        draw_rectangle(
+            0.0,
+            self.height - 10.0,
+            self.width,
+            10.0,
+            Config::COLOR_BORDER,
+        );
+
+        // 2. Dashed Net Line (Center)
+        let center_x = self.width / 2.0;
+        let mut dash_y = 15.0;
+        while dash_y < self.height - 15.0 {
+            draw_rectangle(center_x - 2.0, dash_y, 4.0, 15.0, Config::COLOR_NET);
+            dash_y += 25.0;
+        }
+
+        // 3. HUD Scoreboard & Controls Header
+        let score_text = format!(
+            "PLAYER: {}    BOT ({}): {}",
             player.score, diff_str, bot.score
-        )?;
+        );
+        draw_text(&score_text, 40.0, 45.0, 28.0, WHITE);
+        draw_text(
+            "Controls: W/S or Up/Down | P: Pause | Esc: Quit",
+            self.width - 420.0,
+            45.0,
+            18.0,
+            LIGHTGRAY,
+        );
 
-        // Top Border
-        execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
-        write!(stdout, "+")?;
-        for _ in 0..self.width {
-            write!(stdout, "-")?;
-        }
-        writeln!(stdout, "+")?;
+        // 4. Player Paddle (Left)
+        draw_rectangle(
+            player.x as f32 - Config::PADDLE_WIDTH / 2.0,
+            player.y as f32 - Config::PADDLE_HEIGHT / 2.0,
+            Config::PADDLE_WIDTH,
+            Config::PADDLE_HEIGHT,
+            Config::COLOR_PLAYER,
+        );
 
-        let ball_x = ball.x.round() as i32;
-        let ball_y = ball.y.round() as i32;
+        // 5. Bot Paddle (Right)
+        draw_rectangle(
+            bot.x as f32 - Config::PADDLE_WIDTH / 2.0,
+            bot.y as f32 - Config::PADDLE_HEIGHT / 2.0,
+            Config::PADDLE_WIDTH,
+            Config::PADDLE_HEIGHT,
+            Config::COLOR_BOT,
+        );
 
-        let player_x = player.x.round() as i32;
-        let player_y = player.y.round() as i32;
-        let player_half_h = (player.height / 2) as i32;
+        // 6. Ball
+        draw_circle(
+            ball.x as f32,
+            ball.y as f32,
+            Config::BALL_RADIUS,
+            Config::COLOR_BALL,
+        );
 
-        let bot_x = bot.x.round() as i32;
-        let bot_y = bot.y.round() as i32;
-        let bot_half_h = (bot.height / 2) as i32;
-
-        for y in 0..self.height as i32 {
-            execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
-            write!(stdout, "|")?;
-
-            for x in 0..self.width as i32 {
-                if x == ball_x && y == ball_y {
-                    execute!(stdout, SetForegroundColor(Config::COLOR_BALL))?;
-                    write!(stdout, "O")?;
-                } else if x == player_x
-                    && (y >= player_y - player_half_h && y <= player_y + player_half_h)
-                {
-                    execute!(stdout, SetForegroundColor(Config::COLOR_PLAYER))?;
-                    write!(stdout, "#")?;
-                } else if x == bot_x && (y >= bot_y - bot_half_h && y <= bot_y + bot_half_h) {
-                    execute!(stdout, SetForegroundColor(Config::COLOR_BOT))?;
-                    write!(stdout, "#")?;
-                } else if x == (self.width / 2) as i32 {
-                    execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
-                    write!(stdout, ":")?;
-                } else {
-                    write!(stdout, " ")?;
-                }
-            }
-
-            execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
-            writeln!(stdout, "|")?;
-        }
-
-        // Bottom Border
-        execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
-        write!(stdout, "+")?;
-        for _ in 0..self.width {
-            write!(stdout, "-")?;
-        }
-        writeln!(stdout, "+")?;
-
+        // 7. Pause Overlay Screen
         if paused {
-            execute!(stdout, SetForegroundColor(Color::Yellow))?;
-            writeln!(
-                stdout,
-                "              *** GAME PAUSED - Press P to Resume ***              "
-            )?;
-        } else {
-            writeln!(
-                stdout,
-                "                                                                   "
-            )?;
-        }
-
-        execute!(stdout, ResetColor)?;
-        stdout.flush()?;
-        Ok(())
-    }
-
-    /// Renders Difficulty Selection Menu.
-    pub fn render_menu(&self) -> io::Result<BotDifficulty> {
-        Self::enable_raw_mode()?;
-        self.clear_screen()?;
-        let mut stdout = io::stdout();
-
-        execute!(stdout, SetForegroundColor(Color::Cyan))?;
-        writeln!(stdout, "\n   =========================================")?;
-        writeln!(stdout, "         PING-PONG GAME (RUST EDITION)     ")?;
-        writeln!(stdout, "   =========================================")?;
-
-        execute!(stdout, SetForegroundColor(Color::White))?;
-        writeln!(stdout, "\n  Select Difficulty Level:\n")?;
-        writeln!(stdout, "  [1] Easy   (Relaxed pace)")?;
-        writeln!(stdout, "  [2] Medium (Standard challenge)")?;
-        writeln!(stdout, "  [3] Hard   (Expert precise bot)\n")?;
-        write!(stdout, "  Press key [1, 2, or 3] to start: ")?;
-        stdout.flush()?;
-
-        loop {
-            if let Ok(Some(key)) = Self::poll_key(Duration::from_millis(10)) {
-                match key {
-                    '1' => return Ok(BotDifficulty::Easy),
-                    '2' => return Ok(BotDifficulty::Medium),
-                    '3' => return Ok(BotDifficulty::Hard),
-                    _ => {}
-                }
-            }
+            draw_rectangle(
+                0.0,
+                0.0,
+                self.width,
+                self.height,
+                Color::new(0.0, 0.0, 0.0, 0.65),
+            );
+            let text = "GAME PAUSED";
+            let dims = measure_text(text, None, 50, 1.0);
+            draw_text(
+                text,
+                (self.width - dims.width) / 2.0,
+                self.height / 2.0 - 20.0,
+                50.0,
+                YELLOW,
+            );
+            let subtext = "Press P to Resume";
+            let sub_dims = measure_text(subtext, None, 24, 1.0);
+            draw_text(
+                subtext,
+                (self.width - sub_dims.width) / 2.0,
+                self.height / 2.0 + 30.0,
+                24.0,
+                WHITE,
+            );
         }
     }
 
-    /// Renders Game Over Summary Screen.
-    pub fn render_game_over(&self, player_won: bool) -> io::Result<()> {
-        let mut stdout = io::stdout();
-        writeln!(stdout, "\n")?;
+    /// Renders Difficulty Selection Menu Screen with Mouse & Key interaction
+    pub fn render_menu(&self) -> Option<BotDifficulty> {
+        self.clear_screen();
 
-        if player_won {
-            execute!(stdout, SetForegroundColor(Config::COLOR_PLAYER))?;
-            writeln!(stdout, "  =========================================")?;
-            writeln!(stdout, "          YOU WON! CONGRATULATIONS!        ")?;
-            writeln!(stdout, "  =========================================")?;
-            execute!(stdout, SetForegroundColor(Color::White))?;
-            writeln!(stdout, "  You defeated the Computer!")?;
-        } else {
-            execute!(stdout, SetForegroundColor(Config::COLOR_BOT))?;
-            writeln!(stdout, "  =========================================")?;
-            writeln!(stdout, "          GAME OVER - COMPUTER WON         ")?;
-            writeln!(stdout, "  =========================================")?;
-            execute!(stdout, SetForegroundColor(Color::White))?;
-            writeln!(stdout, "  Better luck next time!")?;
-        }
+        // Header Title
+        let title = "PING-PONG (RUST GUI EDITION)";
+        let title_dims = measure_text(title, None, 40, 1.0);
+        draw_text(
+            title,
+            (self.width - title_dims.width) / 2.0,
+            120.0,
+            40.0,
+            SKYBLUE,
+        );
 
-        writeln!(stdout, "\n  Press any key to exit...")?;
-        stdout.flush()?;
+        draw_text(
+            "Select Bot Difficulty to Start Game:",
+            (self.width - 320.0) / 2.0,
+            180.0,
+            24.0,
+            WHITE,
+        );
 
-        loop {
-            if let Ok(Some(_)) = Self::poll_key(Duration::from_millis(20)) {
-                break;
+        // Buttons: Easy, Medium, Hard
+        let btn_width = 360.0;
+        let btn_height = 55.0;
+        let btn_x = (self.width - btn_width) / 2.0;
+
+        let mouse_pos = mouse_position();
+        let mouse_click = is_mouse_button_pressed(MouseButton::Left);
+
+        let options = [
+            (
+                BotDifficulty::Easy,
+                "1. EASY (Relaxed Pace)",
+                240.0,
+                KeyCode::Key1,
+            ),
+            (
+                BotDifficulty::Medium,
+                "2. MEDIUM (Standard Challenge)",
+                320.0,
+                KeyCode::Key2,
+            ),
+            (
+                BotDifficulty::Hard,
+                "3. HARD (Expert Precise Bot)",
+                400.0,
+                KeyCode::Key3,
+            ),
+        ];
+
+        for (diff, label, y_pos, key) in options {
+            let is_hover = mouse_pos.0 >= btn_x
+                && mouse_pos.0 <= btn_x + btn_width
+                && mouse_pos.1 >= y_pos
+                && mouse_pos.1 <= y_pos + btn_height;
+
+            let color = if is_hover {
+                Color::new(0.20, 0.45, 0.85, 1.0)
+            } else {
+                Color::new(0.14, 0.18, 0.26, 1.0)
+            };
+
+            draw_rectangle(btn_x, y_pos, btn_width, btn_height, color);
+            draw_rectangle_lines(btn_x, y_pos, btn_width, btn_height, 2.0, SKYBLUE);
+
+            let lbl_dims = measure_text(label, None, 22, 1.0);
+            draw_text(
+                label,
+                btn_x + (btn_width - lbl_dims.width) / 2.0,
+                y_pos + 34.0,
+                22.0,
+                WHITE,
+            );
+
+            if (is_hover && mouse_click) || is_key_pressed(key) {
+                return Some(diff);
             }
         }
 
-        Self::disable_raw_mode()?;
-        Ok(())
+        None
+    }
+
+    /// Renders Game Over Summary Screen
+    pub fn render_game_over(&self, player_won: bool) -> bool {
+        draw_rectangle(
+            0.0,
+            0.0,
+            self.width,
+            self.height,
+            Color::new(0.0, 0.0, 0.0, 0.75),
+        );
+
+        let title = if player_won {
+            "VICTORY! YOU WON!"
+        } else {
+            "GAME OVER - BOT WON!"
+        };
+        let color = if player_won { GREEN } else { RED };
+
+        let dims = measure_text(title, None, 44, 1.0);
+        draw_text(
+            title,
+            (self.width - dims.width) / 2.0,
+            self.height / 2.0 - 40.0,
+            44.0,
+            color,
+        );
+
+        let subtext = "Press SPACE or ENTER to Play Again";
+        let sub_dims = measure_text(subtext, None, 24, 1.0);
+        draw_text(
+            subtext,
+            (self.width - sub_dims.width) / 2.0,
+            self.height / 2.0 + 30.0,
+            24.0,
+            WHITE,
+        );
+
+        is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter)
     }
 }

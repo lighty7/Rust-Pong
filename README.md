@@ -1,13 +1,13 @@
-# 🏓 Ping-Pong (Rust Edition)
+# 🏓 Ping-Pong (Rust GUI Edition)
 
 [![Rust Version](https://img.shields.io/badge/Rust-2021%20Edition-orange.svg)](https://www.rust-lang.org/)
 [![Cargo Build](https://img.shields.io/badge/Cargo-Passing-brightgreen.svg)](https://doc.rust-lang.org/cargo/)
-[![Docker Container](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![GUI Engine](https://img.shields.io/badge/Macroquad-2D%20GUI-blue.svg)](https://macroquad.rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An industry-standard, memory-safe, terminal-based **Ping-Pong game written in idiomatic Rust**. Features an autonomous Computer Bot opponent with selectable difficulty levels, frame delta timing (~60 FPS), crossterm terminal manipulation, and ANSI TrueColor retro graphics.
+An industry-standard, memory-safe **2D Graphical Ping-Pong game written in idiomatic Rust** using the **Macroquad** game engine. Features an interactive mouse/keyboard menu, smooth 60 FPS hardware rendering, custom retro neon visuals, and an intelligent Bot opponent with 3 difficulty levels.
 
-This repository serves as both a production-ready application and an **in-depth Rust tutorial reference** explaining Ownership, Borrowing (`&`, `&mut`), Enums, Pattern Matching, Struct Methods (`impl`), Error Handling (`Result`), and Cargo build workflows.
+This repository serves as both a production-ready graphical application and an **in-depth Rust tutorial reference** explaining 2D Windowing, Event Loops, Macroquad graphics rendering, Async `main`, Ownership, and Cargo workflows.
 
 ---
 
@@ -17,13 +17,11 @@ This repository serves as both a production-ready application and an **in-depth 
 
 | Concept | File Location | Description & Syntax Reference |
 | :--- | :--- | :--- |
-| **Structs & Implementation** | [`ball.rs`](src/ball.rs), [`paddle.rs`](src/paddle.rs) | `pub struct Ball` paired with `impl Ball` blocks for object-like state & methods. |
-| **Ownership & Borrowing** | [`paddle.rs`](src/paddle.rs) | Methods taking `&self` (read-only borrow) vs `&mut self` (exclusive mutable borrow). |
+| **GUI Event Loop** | [`main.rs`](src/main.rs) | `#[macroquad::main]` async event loop updating frame rendering at 60 FPS. |
+| **2D Hardware Renderer** | [`renderer.rs`](src/renderer.rs) | `draw_rectangle`, `draw_circle`, `draw_text` for sleek 2D graphics & HUD. |
+| **Interactive UI Buttons** | [`renderer.rs`](src/renderer.rs) | Mouse position hover detection & click input handling for difficulty menu. |
+| **Structs & Implementation** | [`ball.rs`](src/ball.rs), [`paddle.rs`](src/paddle.rs) | `pub struct Ball` paired with `impl Ball` blocks for state physics & kinematic methods. |
 | **Enums & Pattern Matching** | [`config.rs`](src/config.rs), [`game.rs`](src/game.rs) | `match difficulty { ... }` handles all variants (`Easy`, `Medium`, `Hard`) safely. |
-| **Derive Macros** | [`config.rs`](src/config.rs) | `#[derive(Debug, Clone, Copy, PartialEq)]` generates trait implementations. |
-| **Error Handling** | [`main.rs`](src/main.rs), [`game.rs`](src/game.rs) | Return type `Result<(), Box<dyn Error>>` handles terminal initialization failure. |
-| **Panic Hook Handler** | [`main.rs`](src/main.rs) | `std::panic::set_hook(...)` guarantees raw terminal state is restored on unexpected crashes. |
-| **Cross-Platform Input** | [`renderer.rs`](src/renderer.rs) | `crossterm::event::poll` listens for keypresses without blocking game loop thread. |
 
 ---
 
@@ -44,8 +42,8 @@ This repository serves as both a production-ready application and an **in-depth 
 +-------+--------+       +----------------+        +---------+------+
 |    ball.rs     |       |   paddle.rs    |        |   renderer.rs  |
 +----------------+       +----------------+        +----------------+
-(Kinematics &    )       (Player & Bot    )        (Crossterm ANSI  )
-(Bounce Physics  )       (Tracking Logic  )        (Raw Mode Input  )
+(Kinematics &    )       (Player & Bot    )        (Macroquad 2D    )
+(Bounce Physics  )       (Tracking Logic  )        (Hardware Render )
 ```
 
 ### Bot Opponent Algorithm

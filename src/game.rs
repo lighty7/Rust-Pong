@@ -1,17 +1,11 @@
-//! Main Game Engine loop and state machine module.
-//!
-//! # TUTORIAL SYNTAX & CONCEPTS:
-//! 1. `std::time::Instant`: High resolution clock for precise frame timing (`dt`).
-//! 2. Error handling with `Result<(), Box<dyn std::error::Error>>`: Idiomatic Rust error propagation.
+//! Main Game Engine loop and state machine module for GUI.
 
 use crate::ball::Ball;
 use crate::config::{BotDifficulty, Config};
 use crate::paddle::Paddle;
 use crate::renderer::Renderer;
 
-use std::error::Error;
-use std::thread;
-use std::time::{Duration, Instant};
+use macroquad::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameState {
@@ -42,20 +36,20 @@ impl Game {
     pub fn new() -> Self {
         Self {
             ball: Ball::new(
-                (Config::BOARD_WIDTH / 2) as f64,
-                (Config::BOARD_HEIGHT / 2) as f64,
+                (Config::SCREEN_WIDTH / 2.0) as f64,
+                (Config::SCREEN_HEIGHT / 2.0) as f64,
             ),
             player: Paddle::new(
-                2.0,
-                (Config::BOARD_HEIGHT / 2) as f64,
-                Config::PADDLE_HEIGHT,
+                30.0,
+                (Config::SCREEN_HEIGHT / 2.0) as f64,
+                Config::PADDLE_HEIGHT as u16,
             ),
             bot: Paddle::new(
-                (Config::BOARD_WIDTH - 3) as f64,
-                (Config::BOARD_HEIGHT / 2) as f64,
-                Config::PADDLE_HEIGHT,
+                (Config::SCREEN_WIDTH - 30.0) as f64,
+                (Config::SCREEN_HEIGHT / 2.0) as f64,
+                Config::PADDLE_HEIGHT as u16,
             ),
-            renderer: Renderer::new(Config::BOARD_WIDTH, Config::BOARD_HEIGHT),
+            renderer: Renderer::new(Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT),
             difficulty: BotDifficulty::Medium,
             state: GameState::Menu,
             running: true,
@@ -63,76 +57,66 @@ impl Game {
         }
     }
 
-    /// Primary execution loop.
-    pub fn run(&mut self) -> Result<(), Box<dyn Error>> {
-        self.difficulty = self.renderer.render_menu()?;
-        self.state = GameState::Playing;
+    /// Single frame update for Macroquad async loop
+    pub fn update_frame(&mut self) -> bool {
+        let delta_time = get_frame_time().min(0.05) as f64;
 
-        self.renderer.clear_screen()?;
+        if is_key_pressed(KeyCode::Escape) {
+            return false;
+        }
 
-        let mut last_time = Instant::now();
-
-        while self.running && self.state != GameState::GameOver {
-            let now = Instant::now();
-            let mut delta_time = now.duration_since(last_time).as_secs_f64();
-            last_time = now;
-
-            // Clamp delta time to avoid large physics steps
-            if delta_time > 0.05 {
-                delta_time = 0.05;
+        match self.state {
+            GameState::Menu => {
+                if let Some(selected_diff) = self.renderer.render_menu() {
+                    self.difficulty = selected_diff;
+                    self.reset_round();
+                    self.state = GameState::Playing;
+                }
             }
-
-            self.process_input()?;
-
-            if self.state == GameState::Playing {
+            GameState::Playing => {
+                self.process_input(delta_time);
                 self.update(delta_time);
                 self.handle_collisions();
                 self.check_score();
+
+                self.renderer
+                    .render(&self.ball, &self.player, &self.bot, self.difficulty, false);
             }
-
-            self.renderer.render(
-                &self.ball,
-                &self.player,
-                &self.bot,
-                self.difficulty,
-                self.state == GameState::Paused,
-            )?;
-
-            // Cap at 60 FPS (~16.6ms per frame)
-            let frame_duration = now.elapsed();
-            let target_duration = Duration::from_millis(Config::FRAME_DURATION_MS);
-            if frame_duration < target_duration {
-                thread::sleep(target_duration - frame_duration);
+            GameState::Paused => {
+                self.process_input(delta_time);
+                self.renderer
+                    .render(&self.ball, &self.player, &self.bot, self.difficulty, true);
+            }
+            GameState::GameOver => {
+                if self.renderer.render_game_over(self.player_won) {
+                    self.player.score = 0;
+                    self.bot.score = 0;
+                    self.state = GameState::Menu;
+                }
             }
         }
 
-        Renderer::disable_raw_mode()?;
-        self.renderer.render_game_over(self.player_won)?;
-
-        Ok(())
+        self.running
     }
 
-    fn process_input(&mut self) -> Result<(), Box<dyn Error>> {
-        if let Ok(Some(key)) = Renderer::poll_key(Duration::from_millis(1)) {
-            match key {
-                'q' | 'Q' => self.running = false,
-                'p' | 'P' => {
-                    self.state = match self.state {
-                        GameState::Playing => GameState::Paused,
-                        GameState::Paused => GameState::Playing,
-                        other => other,
-                    };
-                }
-                'w' | 'W' if self.state == GameState::Playing => {
-                    self.player.move_up(0.05, 0.0);
-                }
-                's' | 'S' if self.state == GameState::Playing => {
-                    self.player.move_down(0.05, Config::BOARD_HEIGHT as f64);
-                }
-                _ => {}
+    fn process_input(&mut self, delta_time: f64) {
+        if is_key_pressed(KeyCode::P) {
+            self.state = match self.state {
+                GameState::Playing => GameState::Paused,
+                GameState::Paused => GameState::Playing,
+                other => other,
+            };
+        }
+
+        if self.state == GameState::Playing {
+            if is_key_down(KeyCode::W) || is_key_down(KeyCode::Up) {
+                self.player.move_up(delta_time, 10.0);
+            }
+            if is_key_down(KeyCode::S) || is_key_down(KeyCode::Down) {
+                self.player
+                    .move_down(delta_time, (Config::SCREEN_HEIGHT - 10.0) as f64);
             }
         }
-        Ok(())
     }
 
     fn update(&mut self, delta_time: f64) {
@@ -141,32 +125,32 @@ impl Game {
             &self.ball,
             self.difficulty,
             delta_time,
-            0.0,
-            Config::BOARD_HEIGHT as f64,
+            10.0,
+            (Config::SCREEN_HEIGHT - 10.0) as f64,
         );
     }
 
     fn handle_collisions(&mut self) {
         // Top / Bottom Wall Collisions
-        if self.ball.y <= 0.0 {
-            self.ball.y = 0.0;
+        if self.ball.y <= 10.0 + (Config::BALL_RADIUS as f64) {
+            self.ball.y = 10.0 + (Config::BALL_RADIUS as f64);
             self.ball.bounce_y();
-        } else if self.ball.y >= (Config::BOARD_HEIGHT - 1) as f64 {
-            self.ball.y = (Config::BOARD_HEIGHT - 1) as f64;
+        } else if self.ball.y >= (Config::SCREEN_HEIGHT - 10.0 - Config::BALL_RADIUS) as f64 {
+            self.ball.y = (Config::SCREEN_HEIGHT - 10.0 - Config::BALL_RADIUS) as f64;
             self.ball.bounce_y();
         }
 
         // Left Player Paddle Collision
         if self.player.check_collision(self.ball.x, self.ball.y) && self.ball.dir_x < 0.0 {
             let offset = self.player.get_hit_offset(self.ball.y);
-            self.ball.x = self.player.x + 1.0;
+            self.ball.x = self.player.x + (Config::PADDLE_WIDTH / 2.0 + Config::BALL_RADIUS) as f64;
             self.ball.bounce_x(offset);
         }
 
         // Right Bot Paddle Collision
         if self.bot.check_collision(self.ball.x, self.ball.y) && self.ball.dir_x > 0.0 {
             let offset = self.bot.get_hit_offset(self.ball.y);
-            self.ball.x = self.bot.x - 1.0;
+            self.ball.x = self.bot.x - (Config::PADDLE_WIDTH / 2.0 + Config::BALL_RADIUS) as f64;
             self.ball.bounce_x(offset);
         }
     }
@@ -175,31 +159,33 @@ impl Game {
         // Point Bot
         if self.ball.x < 0.0 {
             self.bot.increment_score();
-            self.reset_round();
+            self.check_match_over();
         }
         // Point Player
-        else if self.ball.x > Config::BOARD_WIDTH as f64 {
+        else if self.ball.x > Config::SCREEN_WIDTH as f64 {
             self.player.increment_score();
-            self.reset_round();
+            self.check_match_over();
         }
+    }
 
-        // Match Winner Check
+    fn check_match_over(&mut self) {
         if self.player.score >= Config::MAX_SCORE {
             self.player_won = true;
             self.state = GameState::GameOver;
         } else if self.bot.score >= Config::MAX_SCORE {
             self.player_won = false;
             self.state = GameState::GameOver;
+        } else {
+            self.reset_round();
         }
     }
 
     fn reset_round(&mut self) {
         self.ball.reset(
-            (Config::BOARD_WIDTH / 2) as f64,
-            (Config::BOARD_HEIGHT / 2) as f64,
+            (Config::SCREEN_WIDTH / 2.0) as f64,
+            (Config::SCREEN_HEIGHT / 2.0) as f64,
         );
-        self.player.y = (Config::BOARD_HEIGHT / 2) as f64;
-        self.bot.y = (Config::BOARD_HEIGHT / 2) as f64;
-        thread::sleep(Duration::from_millis(500));
+        self.player.y = (Config::SCREEN_HEIGHT / 2.0) as f64;
+        self.bot.y = (Config::SCREEN_HEIGHT / 2.0) as f64;
     }
 }

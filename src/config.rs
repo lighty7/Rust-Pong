@@ -1,11 +1,6 @@
-//! Configuration module for Ping-Pong (Rust Edition).
-//!
-//! # TUTORIAL SYNTAX & CONCEPTS:
-//! 1. `pub enum`: Strongly typed enumerations in Rust. Enums can derive traits like `Copy`, `Clone`, `PartialEq`, `Debug`.
-//! 2. `pub const`: Compile-time constants in Rust require explicit type annotations (`: usize`, `: f64`).
-//! 3. `#[derive(...)]`: Macro attribute that automatically implements trait behavior for a type.
+//! Configuration module for Ping-Pong (Rust Edition GUI).
 
-use crossterm::style::Color;
+use macroquad::color::Color;
 
 /// Bot Skill levels altering prediction accuracy and tracking velocity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -19,41 +14,29 @@ pub enum BotDifficulty {
 pub struct Config;
 
 impl Config {
-    /// Width of the terminal playing grid
-    pub const BOARD_WIDTH: u16 = 80;
+    /// GUI Window dimensions
+    pub const SCREEN_WIDTH: f32 = 800.0;
+    pub const SCREEN_HEIGHT: f32 = 600.0;
 
-    /// Height of the terminal playing grid
+    /// Playfield grid proportions
+    #[allow(dead_code)]
+    pub const BOARD_WIDTH: u16 = 80;
+    #[allow(dead_code)]
     pub const BOARD_HEIGHT: u16 = 24;
 
-    /// Target Frame Rate (60 Frames Per Second)
-    pub const TARGET_FPS: u64 = 60;
-    pub const FRAME_DURATION_MS: u64 = 1000 / Self::TARGET_FPS;
-
-    /// Paddle height in vertical characters
-    pub const PADDLE_HEIGHT: u16 = 5;
+    /// Paddle dimensions
+    pub const PADDLE_WIDTH: f32 = 16.0;
+    pub const PADDLE_HEIGHT: f32 = 100.0;
+    pub const BALL_RADIUS: f32 = 12.0;
 
     /// Maximum score needed to win match
     pub const MAX_SCORE: u32 = 5;
 
-    // Modern Brand Colors (Crossterm RGB Color instances)
-    pub const COLOR_BORDER: Color = Color::Rgb {
-        r: 66,
-        g: 133,
-        b: 244,
-    }; // Blue
-    pub const COLOR_PLAYER: Color = Color::Rgb {
-        r: 52,
-        g: 168,
-        b: 83,
-    }; // Green
-    pub const COLOR_BOT: Color = Color::Rgb {
-        r: 234,
-        g: 67,
-        b: 53,
-    }; // Red
-    pub const COLOR_BALL: Color = Color::Rgb {
-        r: 251,
-        g: 188,
-        b: 5,
-    }; // Yellow
+    // Macroquad Color instances
+    pub const COLOR_BACKGROUND: Color = Color::new(0.08, 0.09, 0.12, 1.0); // Dark sleek background
+    pub const COLOR_BORDER: Color = Color::new(0.26, 0.52, 0.96, 1.0); // Electric Blue
+    pub const COLOR_PLAYER: Color = Color::new(0.20, 0.66, 0.33, 1.0); // Vibrant Green
+    pub const COLOR_BOT: Color = Color::new(0.92, 0.26, 0.21, 1.0); // Crimson Red
+    pub const COLOR_BALL: Color = Color::new(0.98, 0.74, 0.02, 1.0); // Neon Yellow
+    pub const COLOR_NET: Color = Color::new(0.40, 0.45, 0.55, 0.6); // Translucent Net
 }
