@@ -171,6 +171,7 @@ impl Renderer {
 
     /// Renders Difficulty Selection Menu.
     pub fn render_menu(&self) -> io::Result<AIDifficulty> {
+        Self::enable_raw_mode()?;
         self.clear_screen()?;
         let mut stdout = io::stdout();
 
@@ -186,8 +187,6 @@ impl Renderer {
         writeln!(stdout, "  [3] Hard   (Expert precise AI)\n")?;
         write!(stdout, "  Press key [1, 2, or 3] to start: ")?;
         stdout.flush()?;
-
-        Self::enable_raw_mode()?;
 
         loop {
             if let Ok(Some(key)) = Self::poll_key(Duration::from_millis(10)) {
