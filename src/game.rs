@@ -32,6 +32,12 @@ pub struct Game {
     player_won: bool,
 }
 
+impl Default for Game {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Game {
     pub fn new() -> Self {
         Self {
@@ -117,15 +123,11 @@ impl Game {
                         other => other,
                     };
                 }
-                'w' | 'W' => {
-                    if self.state == GameState::Playing {
-                        self.player.move_up(0.05, 0.0);
-                    }
+                'w' | 'W' if self.state == GameState::Playing => {
+                    self.player.move_up(0.05, 0.0);
                 }
-                's' | 'S' => {
-                    if self.state == GameState::Playing {
-                        self.player.move_down(0.05, Config::BOARD_HEIGHT as f64);
-                    }
+                's' | 'S' if self.state == GameState::Playing => {
+                    self.player.move_down(0.05, Config::BOARD_HEIGHT as f64);
                 }
                 _ => {}
             }
