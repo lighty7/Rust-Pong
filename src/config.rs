@@ -36,8 +36,24 @@ impl Config {
     pub const MAX_SCORE: u32 = 5;
 
     // Google Brand Colors (Crossterm RGB Color instances)
-    pub const COLOR_BORDER: Color = Color::Rgb { r: 66, g: 133, b: 244 }; // Google Blue
-    pub const COLOR_PLAYER: Color = Color::Rgb { r: 52, g: 168, b: 83 };  // Google Green
-    pub const COLOR_AI: Color     = Color::Rgb { r: 234, g: 67, b: 53 };  // Google Red
-    pub const COLOR_BALL: Color   = Color::Rgb { r: 251, g: 188, b: 5 };  // Google Yellow
+    pub const COLOR_BORDER: Color = Color::Rgb {
+        r: 66,
+        g: 133,
+        b: 244,
+    }; // Google Blue
+    pub const COLOR_PLAYER: Color = Color::Rgb {
+        r: 52,
+        g: 168,
+        b: 83,
+    }; // Google Green
+    pub const COLOR_AI: Color = Color::Rgb {
+        r: 234,
+        g: 67,
+        b: 53,
+    }; // Google Red
+    pub const COLOR_BALL: Color = Color::Rgb {
+        r: 251,
+        g: 188,
+        b: 5,
+    }; // Google Yellow
 }

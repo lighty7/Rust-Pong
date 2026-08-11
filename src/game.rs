@@ -39,7 +39,11 @@ impl Game {
                 (Config::BOARD_WIDTH / 2) as f64,
                 (Config::BOARD_HEIGHT / 2) as f64,
             ),
-            player: Paddle::new(2.0, (Config::BOARD_HEIGHT / 2) as f64, Config::PADDLE_HEIGHT),
+            player: Paddle::new(
+                2.0,
+                (Config::BOARD_HEIGHT / 2) as f64,
+                Config::PADDLE_HEIGHT,
+            ),
             ai: Paddle::new(
                 (Config::BOARD_WIDTH - 3) as f64,
                 (Config::BOARD_HEIGHT / 2) as f64,

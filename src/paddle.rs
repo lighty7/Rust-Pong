@@ -48,7 +48,14 @@ impl Paddle {
     }
 
     /// Autonomous AI controller tracking ball location.
-    pub fn update_ai(&mut self, ball: &Ball, difficulty: AIDifficulty, delta_time: f64, min_y: f64, max_y: f64) {
+    pub fn update_ai(
+        &mut self,
+        ball: &Ball,
+        difficulty: AIDifficulty,
+        delta_time: f64,
+        min_y: f64,
+        max_y: f64,
+    ) {
         let target_y = ball.y;
 
         let ai_speed = match difficulty {

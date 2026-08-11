@@ -65,7 +65,14 @@ impl Renderer {
     }
 
     /// Renders game state to terminal using Crossterm double-buffered queue macros.
-    pub fn render(&self, ball: &Ball, player: &Paddle, ai: &Paddle, diff: AIDifficulty, paused: bool) -> io::Result<()> {
+    pub fn render(
+        &self,
+        ball: &Ball,
+        player: &Paddle,
+        ai: &Paddle,
+        diff: AIDifficulty,
+        paused: bool,
+    ) -> io::Result<()> {
         let mut stdout = io::stdout();
 
         // Move to origin (0,0) instead of clear screen to eliminate flicker
@@ -116,7 +123,9 @@ impl Renderer {
                 if x == ball_x && y == ball_y {
                     execute!(stdout, SetForegroundColor(Config::COLOR_BALL))?;
                     write!(stdout, "O")?;
-                } else if x == player_x && (y >= player_y - player_half_h && y <= player_y + player_half_h) {
+                } else if x == player_x
+                    && (y >= player_y - player_half_h && y <= player_y + player_half_h)
+                {
                     execute!(stdout, SetForegroundColor(Config::COLOR_PLAYER))?;
                     write!(stdout, "#")?;
                 } else if x == ai_x && (y >= ai_y - ai_half_h && y <= ai_y + ai_half_h) {
@@ -144,9 +153,15 @@ impl Renderer {
 
         if paused {
             execute!(stdout, SetForegroundColor(Color::Yellow))?;
-            writeln!(stdout, "              *** GAME PAUSED - Press P to Resume ***              ")?;
+            writeln!(
+                stdout,
+                "              *** GAME PAUSED - Press P to Resume ***              "
+            )?;
         } else {
-            writeln!(stdout, "                                                                   ")?;
+            writeln!(
+                stdout,
+                "                                                                   "
+            )?;
         }
 
         execute!(stdout, ResetColor)?;
