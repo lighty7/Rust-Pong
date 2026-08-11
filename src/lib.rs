@@ -1,6 +1,6 @@
-//! Google Ping-Pong Game Engine Library
+//! Ping-Pong Game Engine Library
 //!
-//! Exposes game entities, rendering pipeline, configuration constants, and AI controllers.
+//! Exposes game entities, rendering pipeline, configuration constants, and bot controllers.
 
 pub mod ball;
 pub mod config;

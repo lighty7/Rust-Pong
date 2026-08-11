@@ -1,4 +1,4 @@
-//! Configuration module for Google Ping-Pong (Rust Edition).
+//! Configuration module for Ping-Pong (Rust Edition).
 //!
 //! # TUTORIAL SYNTAX & CONCEPTS:
 //! 1. `pub enum`: Strongly typed enumerations in Rust. Enums can derive traits like `Copy`, `Clone`, `PartialEq`, `Debug`.
@@ -7,9 +7,9 @@
 
 use crossterm::style::Color;
 
-/// AI Skill levels altering prediction accuracy and tracking velocity.
+/// Bot Skill levels altering prediction accuracy and tracking velocity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AIDifficulty {
+pub enum BotDifficulty {
     Easy,
     Medium,
     Hard,
@@ -35,25 +35,25 @@ impl Config {
     /// Maximum score needed to win match
     pub const MAX_SCORE: u32 = 5;
 
-    // Google Brand Colors (Crossterm RGB Color instances)
+    // Modern Brand Colors (Crossterm RGB Color instances)
     pub const COLOR_BORDER: Color = Color::Rgb {
         r: 66,
         g: 133,
         b: 244,
-    }; // Google Blue
+    }; // Blue
     pub const COLOR_PLAYER: Color = Color::Rgb {
         r: 52,
         g: 168,
         b: 83,
-    }; // Google Green
-    pub const COLOR_AI: Color = Color::Rgb {
+    }; // Green
+    pub const COLOR_BOT: Color = Color::Rgb {
         r: 234,
         g: 67,
         b: 53,
-    }; // Google Red
+    }; // Red
     pub const COLOR_BALL: Color = Color::Rgb {
         r: 251,
         g: 188,
         b: 5,
-    }; // Google Yellow
+    }; // Yellow
 }

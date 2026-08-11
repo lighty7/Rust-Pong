@@ -1,11 +1,11 @@
-# 🏓 Google Ping-Pong (Rust Edition)
+# 🏓 Ping-Pong (Rust Edition)
 
 [![Rust Version](https://img.shields.io/badge/Rust-2021%20Edition-orange.svg)](https://www.rust-lang.org/)
 [![Cargo Build](https://img.shields.io/badge/Cargo-Passing-brightgreen.svg)](https://doc.rust-lang.org/cargo/)
 [![Docker Container](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An industry-standard, memory-safe, terminal-based **Google Ping-Pong game written in idiomatic Rust**. Features an autonomous Computer AI opponent with selectable difficulty levels, frame delta timing (~60 FPS), crossterm terminal manipulation, and ANSI TrueColor retro graphics.
+An industry-standard, memory-safe, terminal-based **Ping-Pong game written in idiomatic Rust**. Features an autonomous Computer Bot opponent with selectable difficulty levels, frame delta timing (~60 FPS), crossterm terminal manipulation, and ANSI TrueColor retro graphics.
 
 This repository serves as both a production-ready application and an **in-depth Rust tutorial reference** explaining Ownership, Borrowing (`&`, `&mut`), Enums, Pattern Matching, Struct Methods (`impl`), Error Handling (`Result`), and Cargo build workflows.
 
@@ -44,12 +44,12 @@ This repository serves as both a production-ready application and an **in-depth 
 +-------+--------+       +----------------+        +---------+------+
 |    ball.rs     |       |   paddle.rs    |        |   renderer.rs  |
 +----------------+       +----------------+        +----------------+
-(Kinematics &    )       (Player & AI     )        (Crossterm ANSI  )
+(Kinematics &    )       (Player & Bot    )        (Crossterm ANSI  )
 (Bounce Physics  )       (Tracking Logic  )        (Raw Mode Input  )
 ```
 
-### AI Opponent Algorithm
-The AI paddle uses an adaptive tracking heuristic based on the selected difficulty:
+### Bot Opponent Algorithm
+The Bot paddle uses an adaptive tracking heuristic based on the selected difficulty:
 1. **Easy**: Delays tracking until the ball moves towards its boundary (`dir_x > 0`) and moves at 55% speed.
 2. **Medium**: Moves at 80% speed with center alignment deadzones to prevent jittering.
 3. **Hard**: Predicts ball trajectory intercept coordinates at 110% speed with linear trajectory estimation.

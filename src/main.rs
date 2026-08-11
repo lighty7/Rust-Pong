@@ -1,4 +1,4 @@
-//! Entry point for Google Ping-Pong (Rust Edition).
+//! Entry point for Ping-Pong (Rust Edition).
 //!
 //! # TUTORIAL SYNTAX & CONCEPTS:
 //! 1. Module System (`mod` keyword): Declares submodule tree structure.

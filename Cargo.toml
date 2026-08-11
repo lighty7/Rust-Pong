@@ -3,11 +3,11 @@ name = "rust-pingpong"
 version = "1.0.0"
 edition = "2021"
 authors = ["Yash <yash@example.com>"]
-description = "Terminal-based Google Ping-Pong game with AI written in Rust"
+description = "Terminal-based Ping-Pong game written in Rust"
 license = "MIT"
 repository = "https://github.com/your-username/rust-pingpong"
 readme = "README.md"
-keywords = ["game", "pingpong", "terminal", "ai", "rust"]
+keywords = ["game", "pingpong", "terminal", "bot", "rust"]
 categories = ["games", "command-line-utilities"]
 
 [lib]

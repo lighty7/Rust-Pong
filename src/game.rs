@@ -5,7 +5,7 @@
 //! 2. Error handling with `Result<(), Box<dyn std::error::Error>>`: Idiomatic Rust error propagation.
 
 use crate::ball::Ball;
-use crate::config::{AIDifficulty, Config};
+use crate::config::{BotDifficulty, Config};
 use crate::paddle::Paddle;
 use crate::renderer::Renderer;
 
@@ -24,9 +24,9 @@ pub enum GameState {
 pub struct Game {
     ball: Ball,
     player: Paddle,
-    ai: Paddle,
+    bot: Paddle,
     renderer: Renderer,
-    difficulty: AIDifficulty,
+    difficulty: BotDifficulty,
     state: GameState,
     running: bool,
     player_won: bool,
@@ -50,13 +50,13 @@ impl Game {
                 (Config::BOARD_HEIGHT / 2) as f64,
                 Config::PADDLE_HEIGHT,
             ),
-            ai: Paddle::new(
+            bot: Paddle::new(
                 (Config::BOARD_WIDTH - 3) as f64,
                 (Config::BOARD_HEIGHT / 2) as f64,
                 Config::PADDLE_HEIGHT,
             ),
             renderer: Renderer::new(Config::BOARD_WIDTH, Config::BOARD_HEIGHT),
-            difficulty: AIDifficulty::Medium,
+            difficulty: BotDifficulty::Medium,
             state: GameState::Menu,
             running: true,
             player_won: false,
@@ -93,7 +93,7 @@ impl Game {
             self.renderer.render(
                 &self.ball,
                 &self.player,
-                &self.ai,
+                &self.bot,
                 self.difficulty,
                 self.state == GameState::Paused,
             )?;
@@ -137,7 +137,7 @@ impl Game {
 
     fn update(&mut self, delta_time: f64) {
         self.ball.update(delta_time);
-        self.ai.update_ai(
+        self.bot.update_bot(
             &self.ball,
             self.difficulty,
             delta_time,
@@ -163,18 +163,18 @@ impl Game {
             self.ball.bounce_x(offset);
         }
 
-        // Right AI Paddle Collision
-        if self.ai.check_collision(self.ball.x, self.ball.y) && self.ball.dir_x > 0.0 {
-            let offset = self.ai.get_hit_offset(self.ball.y);
-            self.ball.x = self.ai.x - 1.0;
+        // Right Bot Paddle Collision
+        if self.bot.check_collision(self.ball.x, self.ball.y) && self.ball.dir_x > 0.0 {
+            let offset = self.bot.get_hit_offset(self.ball.y);
+            self.ball.x = self.bot.x - 1.0;
             self.ball.bounce_x(offset);
         }
     }
 
     fn check_score(&mut self) {
-        // Point AI
+        // Point Bot
         if self.ball.x < 0.0 {
-            self.ai.increment_score();
+            self.bot.increment_score();
             self.reset_round();
         }
         // Point Player
@@ -187,7 +187,7 @@ impl Game {
         if self.player.score >= Config::MAX_SCORE {
             self.player_won = true;
             self.state = GameState::GameOver;
-        } else if self.ai.score >= Config::MAX_SCORE {
+        } else if self.bot.score >= Config::MAX_SCORE {
             self.player_won = false;
             self.state = GameState::GameOver;
         }
@@ -199,7 +199,7 @@ impl Game {
             (Config::BOARD_HEIGHT / 2) as f64,
         );
         self.player.y = (Config::BOARD_HEIGHT / 2) as f64;
-        self.ai.y = (Config::BOARD_HEIGHT / 2) as f64;
+        self.bot.y = (Config::BOARD_HEIGHT / 2) as f64;
         thread::sleep(Duration::from_millis(500));
     }
 }

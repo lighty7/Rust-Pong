@@ -1,5 +1,5 @@
 # ==============================================================================
-# Multi-Stage Dockerfile for Rust Google Ping-Pong Game
+# Multi-Stage Dockerfile for Rust Ping-Pong Game
 # ==============================================================================
 # TUTORIAL CONCEPTS:
 # Multi-stage Rust build using official rust image for compilation and a lightweight

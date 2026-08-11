@@ -6,7 +6,7 @@
 //! 3. Floating point clamping: `offset.clamp(-1.0, 1.0)` restricts range to valid boundaries.
 
 use crate::ball::Ball;
-use crate::config::AIDifficulty;
+use crate::config::BotDifficulty;
 
 #[derive(Debug, Clone)]
 pub struct Paddle {
@@ -47,41 +47,41 @@ impl Paddle {
         }
     }
 
-    /// Autonomous AI controller tracking ball location.
-    pub fn update_ai(
+    /// Autonomous Bot controller tracking ball location.
+    pub fn update_bot(
         &mut self,
         ball: &Ball,
-        difficulty: AIDifficulty,
+        difficulty: BotDifficulty,
         delta_time: f64,
         min_y: f64,
         max_y: f64,
     ) {
         let target_y = ball.y;
 
-        let ai_speed = match difficulty {
-            AIDifficulty::Easy => {
+        let bot_speed = match difficulty {
+            BotDifficulty::Easy => {
                 if ball.dir_x > 0.0 {
                     self.speed * 0.55
                 } else {
                     return; // Idle when ball is moving away
                 }
             }
-            AIDifficulty::Medium => {
+            BotDifficulty::Medium => {
                 if ball.dir_x > 0.0 {
                     self.speed * 0.80
                 } else {
                     self.speed * 0.30
                 }
             }
-            AIDifficulty::Hard => self.speed * 1.10,
+            BotDifficulty::Hard => self.speed * 1.10,
         };
 
         // Deadzone check to avoid high-frequency jittering
         let deadzone = 0.5;
         if self.y < target_y - deadzone {
-            self.y += ai_speed * delta_time;
+            self.y += bot_speed * delta_time;
         } else if self.y > target_y + deadzone {
-            self.y -= ai_speed * delta_time;
+            self.y -= bot_speed * delta_time;
         }
 
         // Clamp paddle position inside boundaries

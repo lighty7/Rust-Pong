@@ -6,7 +6,7 @@
 //! 3. `execute!` / `queue!`: Macro syntax for sending VT100 / ANSI escape sequences to stdout.
 
 use crate::ball::Ball;
-use crate::config::{AIDifficulty, Config};
+use crate::config::{BotDifficulty, Config};
 use crate::paddle::Paddle;
 
 use crossterm::{
@@ -69,8 +69,8 @@ impl Renderer {
         &self,
         ball: &Ball,
         player: &Paddle,
-        ai: &Paddle,
-        diff: AIDifficulty,
+        bot: &Paddle,
+        diff: BotDifficulty,
         paused: bool,
     ) -> io::Result<()> {
         let mut stdout = io::stdout();
@@ -80,20 +80,20 @@ impl Renderer {
 
         // Title Header
         execute!(stdout, SetForegroundColor(Color::Cyan))?;
-        writeln!(stdout, "  === GOOGLE PING-PONG (RUST EDITION) ===  ")?;
+        writeln!(stdout, "  === PING-PONG GAME (RUST EDITION) ===  ")?;
 
         let diff_str = match diff {
-            AIDifficulty::Easy => "EASY",
-            AIDifficulty::Medium => "MEDIUM",
-            AIDifficulty::Hard => "HARD",
+            BotDifficulty::Easy => "EASY",
+            BotDifficulty::Medium => "MEDIUM",
+            BotDifficulty::Hard => "HARD",
         };
 
         // Scoreboard
         execute!(stdout, SetForegroundColor(Color::White))?;
         writeln!(
             stdout,
-            "  [ PLAYER (W/S) : {} ]    AI ({}) : {}    [ Q:Quit  P:Pause ]",
-            player.score, diff_str, ai.score
+            "  [ PLAYER (W/S) : {} ]    BOT ({}) : {}    [ Q:Quit  P:Pause ]",
+            player.score, diff_str, bot.score
         )?;
 
         // Top Border
@@ -111,9 +111,9 @@ impl Renderer {
         let player_y = player.y.round() as i32;
         let player_half_h = (player.height / 2) as i32;
 
-        let ai_x = ai.x.round() as i32;
-        let ai_y = ai.y.round() as i32;
-        let ai_half_h = (ai.height / 2) as i32;
+        let bot_x = bot.x.round() as i32;
+        let bot_y = bot.y.round() as i32;
+        let bot_half_h = (bot.height / 2) as i32;
 
         for y in 0..self.height as i32 {
             execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
@@ -128,8 +128,8 @@ impl Renderer {
                 {
                     execute!(stdout, SetForegroundColor(Config::COLOR_PLAYER))?;
                     write!(stdout, "#")?;
-                } else if x == ai_x && (y >= ai_y - ai_half_h && y <= ai_y + ai_half_h) {
-                    execute!(stdout, SetForegroundColor(Config::COLOR_AI))?;
+                } else if x == bot_x && (y >= bot_y - bot_half_h && y <= bot_y + bot_half_h) {
+                    execute!(stdout, SetForegroundColor(Config::COLOR_BOT))?;
                     write!(stdout, "#")?;
                 } else if x == (self.width / 2) as i32 {
                     execute!(stdout, SetForegroundColor(Config::COLOR_BORDER))?;
@@ -170,30 +170,30 @@ impl Renderer {
     }
 
     /// Renders Difficulty Selection Menu.
-    pub fn render_menu(&self) -> io::Result<AIDifficulty> {
+    pub fn render_menu(&self) -> io::Result<BotDifficulty> {
         Self::enable_raw_mode()?;
         self.clear_screen()?;
         let mut stdout = io::stdout();
 
         execute!(stdout, SetForegroundColor(Color::Cyan))?;
         writeln!(stdout, "\n   =========================================")?;
-        writeln!(stdout, "         GOOGLE PING-PONG (RUST EDITION)     ")?;
+        writeln!(stdout, "         PING-PONG GAME (RUST EDITION)     ")?;
         writeln!(stdout, "   =========================================")?;
 
         execute!(stdout, SetForegroundColor(Color::White))?;
-        writeln!(stdout, "\n  Select AI Difficulty Level:\n")?;
+        writeln!(stdout, "\n  Select Difficulty Level:\n")?;
         writeln!(stdout, "  [1] Easy   (Relaxed pace)")?;
         writeln!(stdout, "  [2] Medium (Standard challenge)")?;
-        writeln!(stdout, "  [3] Hard   (Expert precise AI)\n")?;
+        writeln!(stdout, "  [3] Hard   (Expert precise bot)\n")?;
         write!(stdout, "  Press key [1, 2, or 3] to start: ")?;
         stdout.flush()?;
 
         loop {
             if let Ok(Some(key)) = Self::poll_key(Duration::from_millis(10)) {
                 match key {
-                    '1' => return Ok(AIDifficulty::Easy),
-                    '2' => return Ok(AIDifficulty::Medium),
-                    '3' => return Ok(AIDifficulty::Hard),
+                    '1' => return Ok(BotDifficulty::Easy),
+                    '2' => return Ok(BotDifficulty::Medium),
+                    '3' => return Ok(BotDifficulty::Hard),
                     _ => {}
                 }
             }
@@ -211,11 +211,11 @@ impl Renderer {
             writeln!(stdout, "          YOU WON! CONGRATULATIONS!        ")?;
             writeln!(stdout, "  =========================================")?;
             execute!(stdout, SetForegroundColor(Color::White))?;
-            writeln!(stdout, "  You defeated the Computer AI!")?;
+            writeln!(stdout, "  You defeated the Computer!")?;
         } else {
-            execute!(stdout, SetForegroundColor(Config::COLOR_AI))?;
+            execute!(stdout, SetForegroundColor(Config::COLOR_BOT))?;
             writeln!(stdout, "  =========================================")?;
-            writeln!(stdout, "          GAME OVER - COMPUTER AI WON      ")?;
+            writeln!(stdout, "          GAME OVER - COMPUTER WON         ")?;
             writeln!(stdout, "  =========================================")?;
             execute!(stdout, SetForegroundColor(Color::White))?;
             writeln!(stdout, "  Better luck next time!")?;
